@@ -14,7 +14,7 @@ var concat   = require('concat-stream')
 var spawn = chpro.spawn
 if (os.type() === 'Windows_NT') spawn = require('win-spawn')
 
-module.exports = function (options) {
+module.exports = function (options, treatedAsStringFields) {
 
   var read = through()
   var duplex
@@ -27,6 +27,7 @@ module.exports = function (options) {
     options.sheet && spawnArgs.push('--sheet') && spawnArgs.push(options.sheet) && delete options.sheet
     options.sheetIndex && spawnArgs.push('--sheet-index') && spawnArgs.push(options.sheetIndex) && delete options.sheetIndex
   }
+  treatedAsStringFields = treatedAsStringFields || [];
 
   spawnArgs.push(filename)
 
@@ -38,6 +39,10 @@ module.exports = function (options) {
           var _data = {}
           for(var k in data) {
             var value = data[k].trim()
+            if (treatedAsStringFields.indexOf(k.trim()) > -1) {
+              _data[k.trim()] = value;
+              continue;
+            }
             _data[k.trim()] = isNaN(value) || /^0/.test(value) ? value : +value
           }
           this.queue(_data)
